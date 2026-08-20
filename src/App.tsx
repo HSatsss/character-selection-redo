@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { Icon } from '@iconify/react'
 import './App.css';
 
@@ -11,12 +11,219 @@ interface FilterBarProps {
   setSelectedType: (val: string) => void;
 }
 
-function FilterBar({ searchQuery, setSearchQuery, selectedRole, setSelectedRole, selectedType, setSelectedType }: FilterBarProps) {
+function FilterBar({ 
+  searchQuery, 
+  setSearchQuery, 
+  selectedRole, 
+  setSelectedRole, 
+  selectedType, 
+  setSelectedType,
+  onOpenAddModal 
+}: FilterBarProps & { onOpenAddModal: () => void }) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 items-center w-full">
       <SearchBar value={searchQuery} onChange={setSearchQuery} />
       <RoleFilter value={selectedRole} onChange={setSelectedRole} />
       <TypeFilter value={selectedType} onChange={setSelectedType} />
+      
+      <button 
+        onClick={onOpenAddModal}
+        className="flex items-center justify-center gap-2 bg-[#111820] border border-[#585858] hover:bg-[#1a232e] text-white text-sm h-10 px-6 rounded-3xl shrink-0 transition-colors cursor-pointer"
+      >
+        <Icon icon="material-symbols:add" className="w-4 h-4" />
+        Add Character
+      </button>
+    </div>
+  );
+}
+
+interface AddCharacterModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddCharacter: (newHero: HeroProps) => void;
+  existingHeroes: HeroProps[];
+}
+
+function AddCharacterModal({ isOpen, onClose, onAddCharacter, existingHeroes }: AddCharacterModalProps) {
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
+  const [attackType, setAttackType] = useState('');
+  const [skills, setSkills] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+
+    const isDuplicate = existingHeroes.some(
+      (hero) => hero.name.trim().toLowerCase() === name.trim().toLowerCase()
+    );
+
+    if (isDuplicate) {
+      setErrorMessage(`Character "${name}" already exists`);
+      return;
+    }
+
+    if (!name || !role || !attackType || !imagePreview) return;
+
+    const newHero: HeroProps = {
+      id: `H-${Date.now()}`,
+      name: name.trim(),
+      role,
+      attackType,
+      image: imagePreview,
+      isAvailable: true,
+      abilities: skills ? skills.split(',').map((s) => s.trim()).filter(Boolean) : []
+    };
+
+    onAddCharacter(newHero);
+    
+    setName('');
+    setRole('');
+    setAttackType('');
+    setSkills('');
+    setImagePreview(null);
+    setErrorMessage('');
+    onClose();
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fadeIn"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-[#0b1015] border border-[#2a3544] rounded-[32px] p-8 max-w-3xl w-full relative shadow-2xl transition-all transform animate-scaleUp"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors cursor-pointer"
+        >
+          <Icon icon="material-symbols:close" className="w-6 h-6" />
+        </button>
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 items-center mt-2">
+          <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-[#2a3544] bg-[#0d141d] rounded-[110px] h-[360px] w-full cursor-pointer hover:border-[#4a5a70] transition-colors group overflow-hidden">
+            <input 
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => setImagePreview(reader.result as string);
+                  reader.readAsDataURL(file);
+                }
+              }} 
+              className="hidden" 
+            />
+            {imagePreview ? (
+              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-[110px]" />
+            ) : (
+              <>
+                <div className="w-20 h-20 rounded-full bg-[#16202c] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                  <Icon icon="ph:user-circle" className="w-12 h-12 text-[#4a5a70]" />
+                </div>
+                <span className="text-[#64748b] font-medium text-sm text-center px-4">
+                  + Add Character Image
+                </span>
+              </>
+            )}
+          </label>
+
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-white text-sm font-semibold">
+                <Icon icon="ph:user-bold" className="w-4 h-4 text-gray-300" />
+                Name:
+              </label>
+              <input 
+                type="text" 
+                required
+                placeholder="Type Character Name" 
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-white text-sm font-semibold">
+                <Icon icon="ph:shield-bold" className="w-4 h-4 text-gray-300" />
+                Role:
+              </label>
+              <div className="relative">
+                <select 
+                  required
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
+                >
+                  <option value="" disabled hidden>Select Character Role</option>
+                  <option value="Roamer" className="bg-[#111820]">Roamer</option>
+                  <option value="Marksman" className="bg-[#111820]">Marksman</option>
+                  <option value="Mage" className="bg-[#111820]">Mage</option>
+                  <option value="Fighter" className="bg-[#111820]">Fighter</option>
+                  <option value="Assassin" className="bg-[#111820]">Assassin</option>
+                </select>
+                <Icon icon="tabler:chevron-down" className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-white text-sm font-semibold">
+                <Icon icon="ph:sword-bold" className="w-4 h-4 text-gray-300" />
+                Attack Type:
+              </label>
+              <div className="relative">
+                <select 
+                  required
+                  value={attackType}
+                  onChange={(e) => setAttackType(e.target.value)}
+                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
+                >
+                  <option value="" disabled hidden>Select Character Attack Type</option>
+                  <option value="Melee" className="bg-[#111820]">Melee</option>
+                  <option value="Ranged" className="bg-[#111820]">Ranged</option>
+                </select>
+                <Icon icon="tabler:chevron-down" className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 text-white text-sm font-semibold">
+                <Icon icon="ph:magic-wand-bold" className="w-4 h-4 text-gray-300" />
+                Skills (Format: SkillName, SkillName, SkillName)
+              </label>
+              <input 
+                type="text" 
+                placeholder="List Character Skills" 
+                value={skills}
+                onChange={(e) => setSkills(e.target.value)}
+                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500"
+              />
+            </div>
+
+            {errorMessage && (
+              <p className="text-red-400 text-xs font-semibold px-2">{errorMessage}</p>
+            )}
+
+            <button 
+              type="submit"
+              className="mt-2 w-full bg-[#16202c] hover:bg-[#1e2d3e] text-white font-semibold h-11 rounded-full border border-[#2a3544] transition-colors cursor-pointer"
+            >
+              + Add Character
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -117,16 +324,18 @@ function SelectCharacter({ selectedHero, onConfirm, onReset }: SelectCharacterPr
 }
 
 function App() {
+  const [heroList, setHeroList] = useState<HeroProps[]>(heroes);
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null);
   const [confirmedHeroName, setConfirmedHeroName] = useState<string | null>(null);
   const [unavailableHeroIds, setUnavailableHeroIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedType, setSelectedType] = useState("");
 
-  const activeHero = heroes.find((h) => h.id === selectedHeroId);
+  const activeHero = heroList.find((h) => h.id === selectedHeroId);
 
   const handleSelectHero = (hero: HeroProps) => {
     if (unavailableHeroIds.includes(hero.id)) return;
@@ -147,7 +356,11 @@ function App() {
     setConfirmedHeroName(null);
   };
 
-  const filteredHeroes = heroes.map((hero) => ({
+  const handleAddHero = (newHero: HeroProps) => {
+    setHeroList((prev) => [...prev, newHero]);
+  };
+
+  const filteredHeroes = heroList.map((hero) => ({
     ...hero,
     isAvailable: hero.isAvailable && !unavailableHeroIds.includes(hero.id)
   })).filter((hero) => {
@@ -169,6 +382,7 @@ function App() {
         setSelectedRole={setSelectedRole}
         selectedType={selectedType}
         setSelectedType={setSelectedType}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center p-6">
@@ -204,11 +418,18 @@ function App() {
           </div>
         </div>
       )}
+
+      <AddCharacterModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onAddCharacter={handleAddHero}
+        existingHeroes={heroList}
+      />
     </div>
   );
 }
 
-interface HeroProps{
+interface HeroProps {
   id: string;
   name: string;
   image: string;
@@ -233,17 +454,11 @@ function CharacterBadges({ text, isAvailable }: { text: string; isAvailable: boo
   );
 }
 
-interface CharacterProfileProps{
+interface CharacterProfileProps {
   hero: HeroProps;
   isSelected: boolean;
+  hasActiveSelection: boolean;
   onSelect: (hero: HeroProps) => void;
-}
-
-interface CharacterProfileProps {
-  hero: HeroProps
-  isSelected: boolean
-  hasActiveSelection: boolean
-  onSelect: (hero: HeroProps) => void
 }
 
 function CharacterProfile({ hero, isSelected, hasActiveSelection, onSelect }: CharacterProfileProps) {
@@ -312,14 +527,14 @@ const heroes = [
   { id: "H-005", name: "Fanny", image: "/Fanny.webp", role: "Assassin", attackType: "Melee", isAvailable: false, abilities: ["Tornado Strike", "Steel Cable", "Cut Throat"] }
 ];
 
-const heroBadge:  Record <string, {color: string; icon:string }> = {
-  Roamer: {color:"#A4523A", icon: "game-icons:leather-boot"},
-  Marksman: {color:"#2F7B45", icon: "mdi:target"},  
-  Mage: {color:"#365477", icon: "game-icons:wizard-staff"},  
-  Fighter: {color:"#8F7353", icon: "game-icons:fist"},  
-  Assassin: {color:"#584187", icon: "game-icons:hood"},  
-  Melee: {color:"#60402D", icon: "game-icons:curvy-knife"},  
-  Ranged: {color:"#1F7891", icon: "game-icons:crossbow"}  
-}
+const heroBadge: Record<string, { color: string; icon: string }> = {
+  Roamer: { color: "#A4523A", icon: "game-icons:leather-boot" },
+  Marksman: { color: "#2F7B45", icon: "mdi:target" },  
+  Mage: { color: "#365477", icon: "game-icons:wizard-staff" },  
+  Fighter: { color: "#8F7353", icon: "game-icons:fist" },  
+  Assassin: { color: "#584187", icon: "game-icons:hood" },  
+  Melee: { color: "#60402D", icon: "game-icons:curvy-knife" },  
+  Ranged: { color: "#1F7891", icon: "game-icons:crossbow" }  
+};
 
-export default App
+export default App;
