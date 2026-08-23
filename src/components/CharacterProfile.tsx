@@ -2,7 +2,7 @@ import type { CharacterProfileProps } from '../types/hero';
 import { HEROBADGE } from '../constants/heroData';
 import { CharacterBadge } from '../components/CharacterBadge';
 
-function CharacterProfile({ hero, isSelected, hasActiveSelection, onSelect }: CharacterProfileProps) {
+export function CharacterProfile({ hero, isSelected, hasActiveSelection, onSelect }: CharacterProfileProps) {
   const roleColor = HEROBADGE[hero.role]?.color ?? '#585858';
 
   return (

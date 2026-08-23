@@ -4,7 +4,7 @@ import type { CharacterAddProps } from '../types/hero';
 import type { HeroProps } from '../types/hero';
 
 
-export function AddCharacterModal({ isOpen, onClose, onAddCharacter, existingHeroes }: CharacterAddProps) {
+export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes }: CharacterAddProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [attackType, setAttackType] = useState('');

@@ -1,6 +1,6 @@
 import type { CharacterSelectProps } from '../types/hero'
 
-export function SelectCharacter({ selectedHero, onConfirm, onReset }: CharacterSelectProps) {
+export function CharacterSelect ({ selectedHero, onConfirm, onReset }: CharacterSelectProps) {
   const isSelectDisabled = !selectedHero || !selectedHero.isAvailable;
 
   return (
