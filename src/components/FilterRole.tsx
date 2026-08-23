@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react';
 
-function FilterRole({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+export function FilterRole({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="relative w-full flex-1 h-10">
       <select
