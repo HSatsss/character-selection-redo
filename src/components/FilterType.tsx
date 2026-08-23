@@ -1,6 +1,6 @@
 import { Icon } from '@iconify/react'
 
-function TypeFilter({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function FilterType({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div className="flex-1 relative h-10 w-full">
       <select 
