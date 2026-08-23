@@ -18,7 +18,7 @@ export interface FilterBarProps {
   onOpenAddModal: () => void;
 }
 
-export interface AddCharacterModalProps {
+export interface CharacterAddProps {
   isOpen: boolean;
   onClose: () => void;
   onAddCharacter: (newHero: HeroProps) => void;
@@ -32,7 +32,7 @@ export interface CharacterProfileProps {
   onSelect: (hero: HeroProps) => void;
 }
 
-export interface SelectCharacterProps {
+export interface CharacterSelectProps {
   selectedHero: HeroProps | null;
   onConfirm: () => void;
   onReset: () => void;
