@@ -3,7 +3,6 @@ import { Icon } from '@iconify/react';
 import type { CharacterAddProps } from '../types/hero';
 import type { HeroProps } from '../types/hero';
 
-
 export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes }: CharacterAddProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
@@ -52,51 +51,55 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fadeIn"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fadeIn overflow-y-auto"
       onClick={onClose}
     >
       <div 
-        className="bg-[#0b1015] border border-[#2a3544] rounded-[32px] p-8 max-w-3xl w-full relative shadow-2xl transition-all transform animate-scaleUp"
+        className="bg-[#0b1015] border border-[#2a3544] rounded-3xl md:rounded-[32px] p-5 sm:p-8 max-w-3xl w-full my-auto relative shadow-2xl transition-all transform animate-scaleUp max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors cursor-pointer"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-white transition-colors cursor-pointer z-10"
         >
           <Icon icon="material-symbols:close" className="w-6 h-6" />
         </button>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8 items-center mt-2">
-          <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-[#2a3544] bg-[#0d141d] rounded-[110px] h-[360px] w-full cursor-pointer hover:border-[#4a5a70] transition-colors group overflow-hidden">
-            <input 
-              type="file" 
-              accept="image/*" 
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => setImagePreview(reader.result as string);
-                  reader.readAsDataURL(file);
-                }
-              }} 
-              className="hidden" 
-            />
-            {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-[110px]" />
-            ) : (
-              <>
-                <div className="w-20 h-20 rounded-full bg-[#16202c] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                  <Icon icon="ph:user-circle" className="w-12 h-12 text-[#4a5a70]" />
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr] gap-6 sm:gap-8 items-start mt-2">
+          {/* Responsive Image Upload Wrapper */}
+          <div className="flex justify-center w-full">
+            <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-[#2a3544] bg-[#0d141d] rounded-full h-[280px] w-[180px] sm:h-[320px] sm:w-[200px] md:h-[360px] md:w-full cursor-pointer hover:border-[#4a5a70] transition-colors group overflow-hidden shrink-0">
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => setImagePreview(reader.result as string);
+                    reader.readAsDataURL(file);
+                  }
+                }} 
+                className="hidden" 
+              />
+              {imagePreview ? (
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-full" />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-4 text-center">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#16202c] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                    <Icon icon="ph:user-circle" className="w-10 h-10 sm:w-12 sm:h-12 text-[#4a5a70]" />
+                  </div>
+                  <span className="text-[#64748b] font-medium text-xs sm:text-sm px-2">
+                    + Add Character Image
+                  </span>
                 </div>
-                <span className="text-[#64748b] font-medium text-sm text-center px-4">
-                  + Add Character Image
-                </span>
-              </>
-            )}
-          </label>
+              )}
+            </label>
+          </div>
 
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
+          {/* Form Fields Section */}
+          <div className="flex flex-col gap-4 sm:gap-5 w-full">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="flex items-center gap-2 text-white text-sm font-semibold">
                 <Icon icon="ph:user-bold" className="w-4 h-4 text-gray-300" />
                 Name:
@@ -110,21 +113,21 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
                   setName(e.target.value);
                   if (errorMessage) setErrorMessage('');
                 }}
-                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500"
+                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 px-4 sm:px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500 w-full"
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="flex items-center gap-2 text-white text-sm font-semibold">
                 <Icon icon="ph:shield-bold" className="w-4 h-4 text-gray-300" />
                 Role:
               </label>
-              <div className="relative">
+              <div className="relative w-full">
                 <select 
                   required
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
+                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 pl-4 sm:pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
                 >
                   <option value="" disabled hidden>Select Character Role</option>
                   <option value="Roamer" className="bg-[#111820]">Roamer</option>
@@ -137,17 +140,17 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="flex items-center gap-2 text-white text-sm font-semibold">
                 <Icon icon="ph:sword-bold" className="w-4 h-4 text-gray-300" />
                 Attack Type:
               </label>
-              <div className="relative">
+              <div className="relative w-full">
                 <select 
                   required
                   value={attackType}
                   onChange={(e) => setAttackType(e.target.value)}
-                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
+                  className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 pl-4 sm:pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
                 >
                   <option value="" disabled hidden>Select Character Attack Type</option>
                   <option value="Melee" className="bg-[#111820]">Melee</option>
@@ -157,17 +160,17 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="flex items-center gap-2 text-white text-sm font-semibold">
                 <Icon icon="ph:magic-wand-bold" className="w-4 h-4 text-gray-300" />
-                Skills (Format: SkillName, SkillName, SkillName)
+                Skills <span className="text-gray-400 font-normal text-xs">(SkillName, SkillName)</span>
               </label>
               <input 
                 type="text" 
                 placeholder="List Character Skills" 
                 value={skills}
                 onChange={(e) => setSkills(e.target.value)}
-                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-11 px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500"
+                className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 px-4 sm:px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500 w-full"
               />
             </div>
 
@@ -177,7 +180,7 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
 
             <button 
               type="submit"
-              className="mt-2 w-full bg-[#16202c] hover:bg-[#1e2d3e] text-white font-semibold h-11 rounded-full border border-[#2a3544] transition-colors cursor-pointer"
+              className="mt-2 w-full bg-[#16202c] hover:bg-[#1e2d3e] text-white font-semibold h-10 sm:h-11 rounded-full border border-[#2a3544] transition-colors cursor-pointer text-sm"
             >
               + Add Character
             </button>

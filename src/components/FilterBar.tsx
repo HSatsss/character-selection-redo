@@ -1,4 +1,3 @@
-import { Icon } from '@iconify/react'
 import type { FilterBarProps } from '../types/hero'
 import { FilterRole } from '../components/FilterRole'
 import { FilterSearch } from '../components/FilterSearch'
