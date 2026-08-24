@@ -66,7 +66,7 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
         </button>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr] gap-6 sm:gap-8 items-start mt-2">
-          {/* Responsive Image Upload Wrapper */}
+
           <div className="flex justify-center w-full">
             <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-[#2a3544] bg-[#0d141d] rounded-full h-[280px] w-[180px] sm:h-[320px] sm:w-[200px] md:h-[360px] md:w-full cursor-pointer hover:border-[#4a5a70] transition-colors group overflow-hidden shrink-0">
               <input 
@@ -97,7 +97,6 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
             </label>
           </div>
 
-          {/* Form Fields Section */}
           <div className="flex flex-col gap-4 sm:gap-5 w-full">
             <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="flex items-center gap-2 text-white text-sm font-semibold">
