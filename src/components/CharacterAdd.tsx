@@ -1,89 +1,124 @@
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Icon } from '@iconify/react';
 import type { CharacterAddProps } from '../types/hero';
 import type { HeroProps } from '../types/hero';
+import { z } from 'zod'
 
-export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes }: CharacterAddProps) {
-  const [name, setName] = useState('');
-  const [role, setRole] = useState('');
-  const [attackType, setAttackType] = useState('');
-  const [skills, setSkills] = useState('');
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
+export const CHARACTERSCHEME = z.object ({
+  name: z.string().trim().min(1, "Character name is required.").max(30, "Name must be 30 characters or less."),
+  role: z.string().min(1, "Please select characters role."),
+  attackType: z.string().min(1, "Please select characters attack type."),
+  image: z.string().min(1, "Character image is required!"),
+  skills: z.string().min(1, "At least one skill is required!").max(100, "Skills list is too long."),
+});
+
+export type CharacterFormValues = z.infer<typeof CHARACTERSCHEME>;
+
+interface CharacterAddExtendedProps extends CharacterAddProps {
+  existingHeroes?: HeroProps[];
+  onAddCharacter?: (newHero: HeroProps) => void;
+}
+
+export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes=[]}: CharacterAddExtendedProps) {
+
+    const {
+    register, 
+    handleSubmit, 
+    setValue, 
+    watch, 
+    reset,
+    setError,
+    formState: { errors }
+  } = useForm<CharacterFormValues>({
+    resolver: zodResolver(CHARACTERSCHEME),
+    mode: 'onTouched',
+    defaultValues: {
+      name: "",
+      role: "",
+      attackType: "",
+      image: "",
+      skills: "", 
+    } 
+  })
+
+  const imagePreview = watch('image');
 
   if (!isOpen) return null;
+  
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage('');
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setValue('image', reader.result as string, { shouldValidate: true });
+    }
+    reader.readAsDataURL(file);
+  }
 
+  const onSubmit = (data: CharacterFormValues) => {
     const isDuplicate = existingHeroes.some(
-      (hero) => hero.name.trim().toLowerCase() === name.trim().toLowerCase()
-    );
+      (hero) => hero.name.trim().toLowerCase() === data.name.trim().toLowerCase()
+    )
 
     if (isDuplicate) {
-      setErrorMessage(`Character "${name}" already exists`);
+      setError('name', {
+        type: 'manual',
+        message: `Character "${data.name.trim()}" already exists!`,
+      });
       return;
     }
 
-    if (!name || !role || !attackType || !imagePreview) return;
-
+    const parseAbilities = data.skills.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+    
     const newHero: HeroProps = {
       id: `H-${Date.now()}`,
-      name: name.trim(),
-      role,
-      attackType,
-      image: imagePreview,
+      name: data.name.trim(),
+      role: data.role,
+      attackType: data.attackType,
+      image: data.image,
       isAvailable: true,
-      abilities: skills ? skills.split(',').map((s) => s.trim()).filter(Boolean) : []
+      abilities: parseAbilities,
     };
 
-    onAddCharacter(newHero);
-    
-    setName('');
-    setRole('');
-    setAttackType('');
-    setSkills('');
-    setImagePreview(null);
-    setErrorMessage('');
+    if (onAddCharacter) {
+      onAddCharacter(newHero);
+    }
+
+    reset();
     onClose();
   };
 
+  const handleCloseModal = () => {
+    reset();
+    onClose();
+  }
+
+
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fadeIn overflow-y-auto"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-[#0b1015] border border-[#2a3544] rounded-3xl md:rounded-[32px] p-5 sm:p-8 max-w-3xl w-full my-auto relative shadow-2xl transition-all transform animate-scaleUp max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-white transition-colors cursor-pointer z-10"
-        >
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300 animate-fadeIn overflow-y-auto" onClick={handleCloseModal} >
+      <div className="bg-[#0b1015] border border-[#2a3544] rounded-3xl md:rounded-[32px] p-5 sm:p-8 max-w-3xl w-full my-auto relative shadow-2xl transition-all transform animate-scaleUp max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()} >
+        <button onClick={handleCloseModal} className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-white transition-colors cursor-pointer z-10" >
           <Icon icon="material-symbols:close" className="w-6 h-6" />
         </button>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr] gap-6 sm:gap-8 items-start mt-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-[220px_1fr] lg:grid-cols-[240px_1fr] gap-6 sm:gap-8 items-start mt-2">
 
-          <div className="flex justify-center w-full">
+          <div className="flex flex-col items-center w-full">
             <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-[#2a3544] bg-[#0d141d] rounded-full h-[280px] w-[180px] sm:h-[320px] sm:w-[200px] md:h-[360px] md:w-full cursor-pointer hover:border-[#4a5a70] transition-colors group overflow-hidden shrink-0">
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => setImagePreview(reader.result as string);
-                    reader.readAsDataURL(file);
-                  }
-                }} 
-                className="hidden" 
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
               />
               {imagePreview ? (
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded-full" />
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-full object-cover rounded-full"
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center p-4 text-center">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#16202c] flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
@@ -95,6 +130,11 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
                 </div>
               )}
             </label>
+            {errors.image && (
+              <p className="text-red-400 text-xs font-semibold px-2 mt-2 text-center">
+                {errors.image.message}
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col gap-4 sm:gap-5 w-full">
@@ -105,15 +145,11 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               </label>
               <input 
                 type="text" 
-                required
                 placeholder="Type Character Name" 
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (errorMessage) setErrorMessage('');
-                }}
+                {...register("name")}
                 className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 px-4 sm:px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500 w-full"
               />
+              {errors.name && <p className="text-red-500 text-xs px-2">{errors.name.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -123,9 +159,8 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               </label>
               <div className="relative w-full">
                 <select 
-                  required
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                  {...register('role')}
+                  defaultValue=""
                   className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 pl-4 sm:pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
                 >
                   <option value="" disabled hidden>Select Character Role</option>
@@ -137,6 +172,7 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
                 </select>
                 <Icon icon="tabler:chevron-down" className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
+              {errors.role && <p className="text-red-500 text-xs px-2">{errors.role.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -146,9 +182,8 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               </label>
               <div className="relative w-full">
                 <select 
-                  required
-                  value={attackType}
-                  onChange={(e) => setAttackType(e.target.value)}
+                  {...register('attackType')}
+                  defaultValue=""
                   className="w-full appearance-none bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 pl-4 sm:pl-5 pr-10 text-white text-sm outline-none focus:border-white transition-colors cursor-pointer"
                 >
                   <option value="" disabled hidden>Select Character Attack Type</option>
@@ -157,6 +192,7 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
                 </select>
                 <Icon icon="tabler:chevron-down" className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
+              {errors.attackType && <p className="text-red-500 text-xs px-2">{errors.attackType.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -167,15 +203,11 @@ export function CharacterAdd ({ isOpen, onClose, onAddCharacter, existingHeroes 
               <input 
                 type="text" 
                 placeholder="List Character Skills" 
-                value={skills}
-                onChange={(e) => setSkills(e.target.value)}
+                {...register('skills')}
                 className="bg-[#0f172a]/60 border border-[#2a3544] rounded-full h-10 sm:h-11 px-4 sm:px-5 text-white text-sm outline-none focus:border-white transition-colors placeholder:text-gray-500 w-full"
               />
+              {errors.skills && <p className="text-red-500 text-xs px-2">{errors.skills.message}</p>}
             </div>
-
-            {errorMessage && (
-              <p className="text-red-400 text-xs font-semibold px-2">{errorMessage}</p>
-            )}
 
             <button 
               type="submit"

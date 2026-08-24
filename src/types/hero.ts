@@ -21,8 +21,7 @@ export interface FilterBarProps {
 export interface CharacterAddProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddCharacter: (newHero: HeroProps) => void;
-  existingHeroes: HeroProps[];
+  onAddCharacter?: (newHero: HeroProps) => void;
 }
 
 export interface CharacterProfileProps {
